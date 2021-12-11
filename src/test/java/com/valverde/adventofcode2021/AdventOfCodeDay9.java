@@ -18,9 +18,9 @@ public class AdventOfCodeDay9 {
         final File file = new File("input/day9-input.txt");
         final List<String> txtLines = Files.readAllLines(file.toPath(), Charset.defaultCharset());
         final int[][] matrix = loadMatrix(txtLines);
-        final List<Point> lowPoints = findLowPoints(matrix);
+        final List<BasinPoint> lowPoints = findLowPoints(matrix);
         int sum = 0;
-        for (Point p : lowPoints) {
+        for (BasinPoint p : lowPoints) {
             sum += (p.value + 1);
         }
         System.out.println(sum);
@@ -31,7 +31,7 @@ public class AdventOfCodeDay9 {
         final File file = new File("input/day9-input.txt");
         final List<String> txtLines = Files.readAllLines(file.toPath(), Charset.defaultCharset());
         final int[][] matrix = loadMatrix(txtLines);
-        final List<Point> lowPoints = findLowPoints(matrix);
+        final List<BasinPoint> lowPoints = findLowPoints(matrix);
         final List<Basin> basins = findBasinsForLowPoints(lowPoints, matrix);
         Basin n1 = findHighestCountBasin(basins);
         basins.remove(n1);
@@ -53,11 +53,11 @@ public class AdventOfCodeDay9 {
         return basin;
     }
 
-    private List<Basin> findBasinsForLowPoints(List<Point> lowPoints, int[][] matrix) {
+    private List<Basin> findBasinsForLowPoints(List<BasinPoint> lowPoints, int[][] matrix) {
         final List<Basin> basins = new ArrayList<>();
         int i = 0;
-        for (Point p : lowPoints) {
-            List<Point> basinPoints = new ArrayList<>();
+        for (BasinPoint p : lowPoints) {
+            List<BasinPoint> basinPoints = new ArrayList<>();
             basinPoints.add(p);
             basinPoints = getAdjactedPointsWithValue(basinPoints, p, p.value + 1, matrix);
             basins.add(new Basin(basinPoints));
@@ -66,15 +66,15 @@ public class AdventOfCodeDay9 {
         return basins;
     }
 
-    private List<Point> getAdjactedPointsWithValue(final List<Point> foundPoints,
-                                                   final Point p,
-                                                   final int expectedValue,
-                                                   final int[][] matrix) {
-        final List<Point> points = getMatchedAdjactedPoints(p, expectedValue, matrix);
-        final List<Point> newPointsFound = points
+    private List<BasinPoint> getAdjactedPointsWithValue(final List<BasinPoint> foundPoints,
+                                                        final BasinPoint p,
+                                                        final int expectedValue,
+                                                        final int[][] matrix) {
+        final List<BasinPoint> points = getMatchedAdjactedPoints(p, expectedValue, matrix);
+        final List<BasinPoint> newPointsFound = points
                 .stream()
                 .filter(point -> {
-                    for (Point po : foundPoints) {
+                    for (BasinPoint po : foundPoints) {
                         if (po.x == point.x && po.y == point.y) {
                             return false;
                         }
@@ -87,13 +87,13 @@ public class AdventOfCodeDay9 {
             return foundPoints;
         }
 
-        for (Point newPoint : newPointsFound) {
-            List<Point> adjactedPointsWithValue =
+        for (BasinPoint newPoint : newPointsFound) {
+            List<BasinPoint> adjactedPointsWithValue =
                     getAdjactedPointsWithValue(foundPoints, newPoint, newPoint.value + 1, matrix);
-            List<Point> filtered = adjactedPointsWithValue
+            List<BasinPoint> filtered = adjactedPointsWithValue
                     .stream()
                     .filter(point -> {
-                        for (Point po : foundPoints) {
+                        for (BasinPoint po : foundPoints) {
                             if (po.x == point.x && po.y == point.y) {
                                 return false;
                             }
@@ -108,29 +108,29 @@ public class AdventOfCodeDay9 {
         return foundPoints;
     }
 
-    private List<Point> getMatchedAdjactedPoints(Point p, int expectedValue, int[][] matrix) {
-        final List<Point> points = new ArrayList<>();
+    private List<BasinPoint> getMatchedAdjactedPoints(BasinPoint p, int expectedValue, int[][] matrix) {
+        final List<BasinPoint> points = new ArrayList<>();
         int value1 = getValue(p.x-1, p.y, matrix);
         int value2 = getValue(p.x+1, p.y, matrix);
-        int value3 = getValue(p.x-1, p.y-1, matrix);
-        int value4 = getValue(p.x-1, p.y+1, matrix);
+        int value3 = getValue(p.x, p.y-1, matrix);
+        int value4 = getValue(p.x, p.y+1, matrix);
         if (value1 >= expectedValue && value1 < 9) {
-            points.add(new Point(p.x-1, p.y, value1));
+            points.add(new BasinPoint(p.x-1, p.y, value1));
         }
         if (value2 >= expectedValue && value2 < 9) {
-            points.add(new Point(p.x+1, p.y, value2));
+            points.add(new BasinPoint(p.x+1, p.y, value2));
         }
         if (value3 >= expectedValue && value3 < 9) {
-            points.add(new Point(p.x, p.y-1, value3));
+            points.add(new BasinPoint(p.x, p.y-1, value3));
         }
         if (value4 >= expectedValue && value4 < 9) {
-            points.add(new Point(p.x, p.y+1, value4));
+            points.add(new BasinPoint(p.x, p.y+1, value4));
         }
         return points;
     }
 
-    private List<Point> findLowPoints(int[][] matrix) {
-        List<Point> points = new ArrayList<>();
+    private List<BasinPoint> findLowPoints(int[][] matrix) {
+        List<BasinPoint> points = new ArrayList<>();
         for (int x = 0; x< 100; x++) {
             for (int y = 0; y < 100; y++) {
                 int value = matrix[x][y];
@@ -139,7 +139,7 @@ public class AdventOfCodeDay9 {
                 boolean case3 = hasHigherPointValue(value, x + 1, y, matrix);
                 boolean case4 = hasHigherPointValue(value, x, y + 1, matrix);
                 if (case1 && case2 && case3 && case4) {
-                    points.add(new Point(x, y, value));
+                    points.add(new BasinPoint(x, y, value));
                 }
             }
         }
@@ -172,12 +172,12 @@ public class AdventOfCodeDay9 {
         return matrix;
     }
 
-    class Point {
+    class BasinPoint {
         int x;
         int y;
         int value;
 
-        public Point(int x, int y,  int value) {
+        public BasinPoint(int x, int y, int value) {
             this.x = x;
             this.y = y;
             this.value = value;
@@ -187,7 +187,7 @@ public class AdventOfCodeDay9 {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            Point point = (Point) o;
+            BasinPoint point = (BasinPoint) o;
             return x == point.x && y == point.y && value == point.value;
         }
 
@@ -198,9 +198,9 @@ public class AdventOfCodeDay9 {
     }
 
     class Basin {
-        List<Point> points = new ArrayList<>();
+        List<BasinPoint> points = new ArrayList<>();
 
-        public Basin(List<Point> points) {
+        public Basin(List<BasinPoint> points) {
             this.points = points;
         }
     }
